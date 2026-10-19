@@ -627,6 +627,8 @@
       this._precipWin = win;
       const body = $('#wxPrecipBody'), sub = $('#wxPrecipSub');
       if (!body) return;
+      /* 同 openSeaLandTemp：连点两档时，先发的那发可能后回来把新画面盖掉 ⇒ 用序号作废过期的那发。 */
+      const seq = this._pxSeq = (this._pxSeq || 0) + 1;
       const nowKind = kind === 'now';
       body.innerHTML = '<div class="wx-load">' + (nowKind
         ? '正在探测最近 1 小时降水实况…'
@@ -635,7 +637,11 @@
       const n = nowKind ? 8 : 6;
       try {
         frames = await W.probePrecip(n, got => { if (sub) sub.textContent = '已找到 ' + got + ' 张'; }, kind, win);
-      } catch (e) { body.innerHTML = '<div class="wx-load">降水数据获取失败：' + esc(e.message) + '</div>'; return; }
+      } catch (e) {
+        if (seq === this._pxSeq) body.innerHTML = '<div class="wx-load">降水数据获取失败：' + esc(e.message) + '</div>';
+        return;
+      }
+      if (seq !== this._pxSeq) return;                 // 已经被更晚的一次切换取代
       if (!frames.length) { body.innerHTML = '<div class="wx-load">暂时取不到降水图</div>'; return; }
       renderPlayer(body, sub, frames,
         nowKind ? '全国 1 小时降水实况' : '全国降水量预报图（未来 ' + win + ' 小时）', {
@@ -665,6 +671,10 @@
       this._slKind = kind;
       const body = $('#wxSeaLandTempBody'), sub = $('#wxSeaLandTempSub');
       if (!body) return;
+      /* 换档时可能有两发在飞：先开抽屉会按默认档（陆地）画一次，用户马上点「海洋温度」
+         又发一发；**先发的慢、后发的快**，于是慢的那发最后才回来，把快的画面盖掉。
+         加一个序号，回来时发现自己已经过期就直接退出。 */
+      const seq = this._slSeq = (this._slSeq || 0) + 1;
       const sea = kind === 'sea';
       const segs = [{
         regions: [['land', '陆地温度'], ['sea', '海洋温度']], region: kind, act: 'kind'
@@ -679,9 +689,10 @@
             if (sub) sub.textContent = '已找到 ' + got + ' 张';
           });
         } catch (e) {
-          body.innerHTML = '<div class="wx-load">气温实况图获取失败：' + esc(e.message) + '</div>';
+          if (seq === this._slSeq) body.innerHTML = '<div class="wx-load">气温实况图获取失败：' + esc(e.message) + '</div>';
           return;
         }
+        if (seq !== this._slSeq) return;                 // 已经被更晚的一次切换取代
         if (!frames.length) { body.innerHTML = '<div class="wx-load">暂时取不到气温实况图</div>'; return; }
         renderPlayer(body, sub, frames, '陆地气温实况 · 中央气象台 · 全国（逐时）', opt);
         return;
@@ -704,9 +715,10 @@
           if (sub) sub.textContent = '已找到 ' + got + ' 张';
         }, cur.layer);
       } catch (e) {
-        body.innerHTML = '<div class="wx-load">海表温度图获取失败：' + esc(e.message) + '</div>';
+        if (seq === this._slSeq) body.innerHTML = '<div class="wx-load">海表温度图获取失败：' + esc(e.message) + '</div>';
         return;
       }
+      if (seq !== this._slSeq) return;                 // 已经被更晚的一次切档取代
       if (!frames.length) { body.innerHTML = '<div class="wx-load">暂时取不到海表温度图</div>'; return; }
       renderPlayer(body, sub, frames, '海洋温度 · ' + cur.n + ' · 东亚与西太平洋（逐日）', opt);
     },
@@ -2453,8 +2465,21 @@
        **用户一个字都看不到**。时间戳本来就有一个专用的 `.wx-pt` 在显示，不必再塞进头部。 */
     if (sub) sub.textContent = title;
 
-    // 全部预载，播放才不卡
-    frames.forEach(f => { const im = new Image(); im.src = f.url; });
+    /* 预载只做"正在看的那张 + 它前一张"，其余的等页面空闲再补。
+       ⚠ 原来是一次性把**全部**帧都 new Image() 预载 —— 海温那 8 张来自 NASA GIBS，
+       单张全尺寸 GetMap 要好几秒，8 张一起发会被浏览器 6 条连接限死，
+       于是正在看的那张反而排在它们后面，体感就是「海温图特别慢」
+       （用户 2026-10-19 报的）。预载是锦上添花，不能挡在首屏前面。 */
+    const preload = k => { const f = frames[k]; if (f) { const im = new Image(); im.src = f.url; } };
+    preload(frames.length - 1);
+    preload(frames.length - 2);
+    const preloadRest = () => {
+      frames.forEach((f, k) => {
+        if (k < frames.length - 2) { const im = new Image(); im.src = f.url; }
+      });
+    };
+    if (window.requestIdleCallback) requestIdleCallback(preloadRest, { timeout: 4000 });
+    else setTimeout(preloadRest, 2000);
 
     function show(n) {
       i = Math.max(0, Math.min(frames.length - 1, n));

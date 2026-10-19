@@ -576,13 +576,27 @@
         const one = [{ url: u, t: now, f: true }];
         return one;
       }
-      // ③ 要显示的那几张：并发取回并缓存成 blob URL。
-      //    GIBS 发 `no-store`，不自己留一份的话，切帧、重开面板都要重下整张大图。
+      // ③ 要显示的那几张。
+      //    ⚠ 这里原来是把 **n 张全尺寸图一起** `_blob()` 出来再返回 —— 海温来自 NASA GIBS，
+      //    单张 1200×780 的 GetMap 要好几秒，8 张并发还会被浏览器 6 条连接卡住，
+      //    于是"打开面板"要等十几秒（用户 2026-10-19 报的就是这个）。
+      //    现在**只等最新那一张**（它就是要显示的那张），其余先给原始 URL 立刻返回；
+      //    剩下的在后台慢慢换成 blob（换过的帧改回 blob URL，之后切帧就不用再下）。
       const urls = days.map(dt => this.seaTempUrl(dt, layer));
-      const got = await Promise.all(urls.map(u => this._blob(u).catch(() => u)));
-      const out = days.map((dt, i) => ({ url: got[i], t: dt, f: true }));
+      const out = days.map((dt, i) => ({ url: urls[i], t: dt, f: true }));
+      const newest = out[0];                      // days 是新→旧，out[0] 就是最新一帧
+      try { newest.url = await this._blob(newest.url); } catch (e) { }
       out.sort((a, b) => a.t - b.t);
       if (!hitUrls) this._cachePut(key, days.map(dt => ({ url: this.seaTempUrl(dt, layer), t: dt })), 6 * 3600000);
+      // 后台把其余几帧也换成 blob；换完直接改 frame.url —— renderPlayer 每次 show() 都读 f.url，
+      // 所以之后切帧、重开面板都不会再走网络（GIBS 是 no-store，不自己留一份就得重下）。
+      setTimeout(() => {
+        out.forEach(f => {
+          if (!f || f.url.indexOf('blob:') === 0) return;
+          const plain = f.url;
+          this._blob(plain).then(b => { f.url = b; }).catch(() => { });
+        });
+      }, 600);
       return out;
     },
 
@@ -594,6 +608,21 @@
         im.onerror = () => res(false);
         im.src = url;
       });
+    },
+
+    /** 只要"这张图在不在"，不要图本身。
+        图床 `image.nmc.cn` 回 `Access-Control-Allow-Origin: *`（实测 HEAD 200 + 287 KB 那张），
+        所以可以直接 HEAD —— 一次开页几十个几百字节的请求，比把每张 200~300 KB 的图都
+        拉下来试便宜两个数量级。万一哪天 HEAD 被挡（CORS 失效 / 405），退回 `_tryImg`。 */
+    async _headOk(url) {
+      try {
+        const r = await fetch(url, { method: 'HEAD', mode: 'cors', cache: 'no-store' });
+        if (r.ok) return true;
+        if (r.status === 405 || r.status === 403) return this._tryImg(url);
+        return false;
+      } catch (e) {
+        return this._tryImg(url);
+      }
     },
 
     /** 探测最近有货的雷达帧：从"现在"的 6 分钟整点往回试，凑够 n 帧。
@@ -652,9 +681,18 @@
     },
 
     /** 降水图两种：
-        kind='fcst' 全国降水量**预报**图，win = 预报时效小时（24/48/72/96/120/144/168，见 PRECIP_WINS），
-                    发布时次走 6 小时网格（00/06/12/18 UTC）
-        kind='now'  最近 1 小时**实况**（每小时一张，整点） */
+        kind='fcst' 全国降水量**预报**图，win = 预报时效小时（24/48/72/96/120/144/168，见 PRECIP_WINS）
+        kind='now'  最近 1 小时**实况**（每小时一张，整点）
+
+        ⚠ **发布时次不在 6 小时网格上**（2026-10-19 逐个 HEAD 实测，见 tmp/precip_cadence.txt）：
+          24 小时档发在 UTC **01 / 07 / 13 / 19**，48 / 72 档发在 **01 / 13**，
+          96 / 120 / 144 / 168 档发在 **00 / 12**。
+          旧实现只试 00 / 06 / 12 / 18，于是每一档都差一小时、全部 404 —— 页面直接
+          显示「暂时取不到降水图」（用户 2026-10-19 报的就是这个）。
+          现在改成**按小时往回扫**（最多 48 小时，凑够 n 帧就停），不再假设网格。
+
+        探测用 HEAD（图床带 `Access-Control-Allow-Origin: *`，实测 200 + 287 KB 的那张也一样），
+        这样一次开页只花几十个几百字节的请求，不用把每张 200~300 KB 的图都拉下来试。 */
     async probePrecip(n, onStep, kind, win) {
       n = n || 6;
       const nowKind = kind === 'now';
@@ -664,26 +702,29 @@
       const now = new Date();
       const base = new Date(now.getTime());
       base.setUTCMinutes(0, 0, 0);
-      let step = 21600000;                       // 预报：6 小时网格
-      if (nowKind) { step = 3600000; base.setUTCMinutes(0, 0, 0); }
-      else { base.setUTCHours(Math.floor(base.getUTCHours() / 6) * 6); }
+      const CAP = nowKind ? 12 : 48;            // 最多往回扫多少小时
       const cand = [];
-      for (let k = 0; k < n + 2; k++) {
-        const dt = new Date(base.getTime() - k * step);
+      for (let k = 0; k < CAP; k++) {
+        const dt = new Date(base.getTime() - k * 3600000);
         if (dt.getTime() > now.getTime()) continue;
         cand.push(dt);
       }
-      // 两种扩展名并发各试一次（同一档的扩展名不统一：大 JPG / 小 jpg 混用）
       const uMain = cand.map(dt => (nowKind ? this.precipNowUrl(dt) : this.precipUrl(dt, win)));
-      const uAlt = uMain.map(u => this.precipUrlAlt(u));
-      const [okMain, okAlt] = await Promise.all([
-        Promise.all(uMain.map(u => this._tryImg(u))),
-        Promise.all(nowKind ? cand.map(() => Promise.resolve(false)) : uAlt.map(u => this._tryImg(u)))
-      ]);
+      const okMain = await Promise.all(uMain.map(u => this._headOk(u)));
       const out = [];
       for (let k = 0; k < cand.length && out.length < n; k++) {
         if (okMain[k]) out.push({ url: uMain[k], t: cand[k], f: true });
-        else if (okAlt[k]) out.push({ url: uAlt[k], t: cand[k], f: true });
+      }
+      // 主扩展名没凑够，再用另一种扩展名把漏掉的时次补一遍
+      //（同一档的扩展名不统一：24/48/72 是大写 .JPG，96 以上只认小写 .jpg）
+      if (out.length < n && !nowKind) {
+        const miss = [];
+        for (let k = 0; k < cand.length; k++) if (!okMain[k]) miss.push(k);
+        const uAlt = miss.map(k => this.precipUrlAlt(uMain[k]));
+        const okAlt = await Promise.all(uAlt.map(u => this._headOk(u)));
+        for (let j = 0; j < miss.length && out.length < n; j++) {
+          if (okAlt[j]) out.push({ url: uAlt[j], t: cand[miss[j]], f: true });
+        }
       }
       out.sort((a, b) => a.t - b.t);
       if (out.length) this._cachePut(key, out, 30 * 60000);     // 实况 1 小时 / 预报 6 小时 ⇒ 缓存 30 分钟
