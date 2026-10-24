@@ -10,7 +10,7 @@
 
 [**lolikonnn.github.io/weather-fighter**](https://lolikonnn.github.io/weather-fighter/)
 
-[GitHub](https://github.com/lolikonnn/weather-fighter) · [B 站](<https://space.bilibili.com/514398962>) · [QQ 空间](<https://h5.qzone.qq.com/ugc/share/?sharetag=532a7a11%2Dced8%2D11f1%2D9955%2D5254004610ce&jumptoqzone=1&feed_action_domain_type=1&banner_type=0&subtype=&ciphertext=&blog_photo=&g=84&res_uin=2744759271&cellid=e7b399a362ccc36a9a6c0400&subid=&bp1=&bp2=&bp7=&appid=311&g_f=2000000103>)
+[GitHub](https://github.com/lolikonnn/weather-fighter) · [B 站](<https://space.bilibili.com/514398962>) · [QQ 空间](<https://user.qzone.qq.com/2744759271>)
 
 </div>
 
@@ -23,7 +23,7 @@
 | GitHub | [@lolikonnn](https://github.com/lolikonnn) |
 | B 站 | <https://space.bilibili.com/514398962> |
 | QQ | `2744759271` |
-| QQ 空间 | <https://h5.qzone.qq.com/ugc/share/?sharetag=532a7a11%2Dced8%2D11f1%2D9955%2D5254004610ce&jumptoqzone=1&feed_action_domain_type=1&banner_type=0&subtype=&ciphertext=&blog_photo=&g=84&res_uin=2744759271&cellid=e7b399a362ccc36a9a6c0400&subid=&bp1=&bp2=&bp7=&appid=311&g_f=2000000103> |
+| QQ 空间 | <https://user.qzone.qq.com/2744759271> |
 
 <img src="docs/qq-qr.jpg" width="240" alt="QQ 2744759271 · 扫码加好友">
 
