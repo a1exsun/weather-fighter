@@ -10,7 +10,24 @@
 
 [**lolikonnn.github.io/weather-fighter**](https://lolikonnn.github.io/weather-fighter/)
 
+[GitHub](https://github.com/lolikonnn/weather-fighter) · [B 站](<https://space.bilibili.com/514398962>) · [QQ 空间](<https://h5.qzone.qq.com/ugc/share/?sharetag=532a7a11%2Dced8%2D11f1%2D9955%2D5254004610ce&jumptoqzone=1&feed_action_domain_type=1&banner_type=0&subtype=&ciphertext=&blog_photo=&g=84&res_uin=2744759271&cellid=e7b399a362ccc36a9a6c0400&subid=&bp1=&bp2=&bp7=&appid=311&g_f=2000000103>)
+
 </div>
+
+### 关于作者
+
+`lolikonnn` —— 一个人做的，没有团队也没有公司。
+
+| 在哪 | 地址 |
+| --- | --- |
+| GitHub | [@lolikonnn](https://github.com/lolikonnn) |
+| B 站 | <https://space.bilibili.com/514398962> |
+| QQ | `2744759271` |
+| QQ 空间 | <https://h5.qzone.qq.com/ugc/share/?sharetag=532a7a11%2Dced8%2D11f1%2D9955%2D5254004610ce&jumptoqzone=1&feed_action_domain_type=1&banner_type=0&subtype=&ciphertext=&blog_photo=&g=84&res_uin=2744759271&cellid=e7b399a362ccc36a9a6c0400&subid=&bp1=&bp2=&bp7=&appid=311&g_f=2000000103> |
+
+<img src="docs/qq-qr.jpg" width="240" alt="QQ 2744759271 · 扫码加好友">
+
+站里左上角那个 `By lolikonnn` 点开就是这里。
 
 > **改名说明**：仓库原叫 `weather-exchange`，已改名为 **`weather-fighter`**。
 > 旧网址 `https://lolikonnn.github.io/weather-exchange/` 现在是 **404** —— GitHub Pages

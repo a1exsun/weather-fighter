@@ -189,6 +189,15 @@
 > 全部改掉了（117 条里 60 条挪动超过 2 分钟，最大 246 分钟）。具体见本节最上面那一条。
 
 
+## 2026-10-24（18:13）— 署名标注改成 `By`；跳转的仓库里补上社交账号
+
+- `web/index.html:22`：`<span class="by-k">作者</span> lolikonnn` → `<span class="by-k">By</span> lolikonnn`（`By` 后面留了一个真空格，读屏读得通）。`.by-k` 的 `margin-right` 从 4px 收到 3px，`css/app.css` 的尾随指纹变成 `e419bda6`。
+- 宽度：桌面 81px、窄屏 76px，仍是一行；顶栏高度依旧 46 / 136px，`scrollWidth == innerWidth`。
+- `README.md`：顶部站点地址下面补一行 `GitHub · B 站 · QQ 空间`；新增「关于作者」一节，列 GitHub / B 站 / QQ（`2744759271`）/ QQ 空间，并嵌加好友二维码 `docs/qq-qr.jpg`（197,994 B，按 240px 宽显示）。
+- 探针 `tmp/byline.js` **21 项全通过**（桌面 1682×948、窄屏 487×748）：判据改成 `^By\s+lolikonnn$`、标注文案 `By`、`opacity=0.6`、间距 3px；其余照旧量顶栏高度、logo 高、`elementFromPoint`、横向溢出。
+- 二维码是静态图片，不联网、不埋点；`README.md` 里点明「站里左上角那个 `By lolikonnn` 点开就是这里」，站里不重复列联系方式。
+
+
 ## 2026-10-24（18:01）— 署名小标前面补上「作者」两个字
 
 只挂一个 `lolikonnn`，读起来像状态标签或品牌后缀，不像"这是谁"。改成 `作者 lolikonnn`：`作者` 压到 `opacity:.6`，名字保持原亮度。

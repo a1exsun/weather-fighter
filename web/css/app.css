@@ -80,7 +80,7 @@ body{
 .brand-by:hover{color:var(--accent);border-color:rgba(240,185,11,.5);background:rgba(240,185,11,.12)}
 /* 「作者」两个字比名字再淡一档：读起来是"作者：某某"，而不是"某某"孤零零挂在标题旁。
    margin-right 给 4px，比字号小标间的默认间距略宽，中文不会挤在一起。 */
-.brand-by .by-k{opacity:.6;margin-right:4px}
+.brand-by .by-k{opacity:.6;margin-right:3px}
 
 .search-wrap{position:relative;flex:1;max-width:430px}
 .search-wrap .search-ico{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:11px;opacity:.55;pointer-events:none}
