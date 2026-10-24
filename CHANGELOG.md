@@ -196,6 +196,7 @@
 - 探针 `tmp/wmhi.js` **22 项全通过**（桌面 1382×748、窄屏 487×608）：`.wm-body` 第一个元素子节点就是它、正文第一句以 `Ciallo` 开头、颜文字一字不差、`a` 的 href/target/rel、链接中心点 `elementFromPoint` 命中的就是它自己、整块在视口内且排在正文第一段之上、字号 15/13px、颜色 `rgb(240,185,11)`、`scrollWidth == innerWidth`、点「我知道啦」仍能关掉。
 - 截图 `tmp/wm_hi_desk.png` / `tmp/wm_hi_mob.png`：窄屏不挤、颜文字没被折行截断。
 
+`commit 2da1c2068849`
 
 ## 2026-10-24（18:13）— 署名标注改成 `By`；跳转的仓库里补上社交账号
 
