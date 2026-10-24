@@ -1375,6 +1375,12 @@ body.fullchart .mtabs{visibility:hidden}
 .wm-body b{color:var(--txt-hi)}
 .wm-body u{text-decoration-color:var(--accent);text-underline-offset:3px}
 .wm-body a{color:var(--accent)}
+.wm-hi{
+  margin:0 0 14px;padding:9px 12px 1px;border-radius:8px;
+  background:linear-gradient(180deg,rgba(240,185,11,.10),rgba(240,185,11,.025));
+  border:1px solid rgba(240,185,11,.24)}
+.wm-hi-g{font-size:15px;line-height:1.35;color:var(--accent);letter-spacing:.4px;margin-bottom:5px}
+.wm-hi p{margin:0 0 9px;color:var(--txt)}
 .wm-note{
   font-size:12px;color:var(--dim);background:#0e1117;border-left:2px solid var(--accent);
   padding:8px 11px;border-radius:0 var(--r) var(--r) 0;

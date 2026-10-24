@@ -189,6 +189,14 @@
 > 全部改掉了（117 条里 60 条挪动超过 2 分钟，最大 246 分钟）。具体见本节最上面那一条。
 
 
+## 2026-10-24（18:53）— 首访弹窗最前面加一句 Ciallo 问候，顺便请人去仓库看看
+
+- `web/index.html:426` 起：`.wm-body` 的第一个元素新增 `<div class="wm-hi">` —— 一行 `Ciallo〜(∠・ω&lt; )⌒☆`，下面一段撒娇口气的话，请人去 **GitHub 仓库**看看、顺手点个 star（`target="_blank" rel="noopener"`；APK 里由 `shouldOverrideUrlLoading` 交给系统浏览器）。
+- `web/css/app.css` 新增 `.wm-hi` 与 `.wm-hi-g`：强调色小方块（`1px solid rgba(240,185,11,.24)` + 竖向渐变底），标题 15px 强调色、`letter-spacing:.4px`，正文仍是 13px；`css/app.css` 尾随指纹变成 `8bfcdb9e`。
+- 探针 `tmp/wmhi.js` **22 项全通过**（桌面 1382×748、窄屏 487×608）：`.wm-body` 第一个元素子节点就是它、正文第一句以 `Ciallo` 开头、颜文字一字不差、`a` 的 href/target/rel、链接中心点 `elementFromPoint` 命中的就是它自己、整块在视口内且排在正文第一段之上、字号 15/13px、颜色 `rgb(240,185,11)`、`scrollWidth == innerWidth`、点「我知道啦」仍能关掉。
+- 截图 `tmp/wm_hi_desk.png` / `tmp/wm_hi_mob.png`：窄屏不挤、颜文字没被折行截断。
+
+
 ## 2026-10-24（18:13）— 署名标注改成 `By`；跳转的仓库里补上社交账号
 
 - `web/index.html:22`：`<span class="by-k">作者</span> lolikonnn` → `<span class="by-k">By</span> lolikonnn`（`By` 后面留了一个真空格，读屏读得通）。`.by-k` 的 `margin-right` 从 4px 收到 3px，`css/app.css` 的尾随指纹变成 `e419bda6`。
