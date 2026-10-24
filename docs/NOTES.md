@@ -3181,3 +3181,29 @@ acc = acc * P.METEOR_DECAY + metArr[k] * (1 - P.METEOR_DECAY);
 
 **纪律：效果小先别急着调系数，先查「那一夜天上真有没有」。** 真实事件驱动的变量，
 量出来偏小往往是因为事件本身被现实条件掐掉了。
+
+## 安卓壳里，站外链接为什么必须外跳（2026-10-24）
+
+WebView 默认对"打开新窗口"是**沉默处理**的：`setSupportMultipleWindows(false)` 时，
+页面里 `target="_blank"` 的链接和 `window.open()` 都会被丢掉 —— 不报错、不跳转、不给回调。
+站里当时有 3 个这样的链接（`web/js/wxui.js:1622`、`web/js/wxui.js:1623`、
+`web/index.html:494`），在 APK 里全都是"点了没反应"。这种坏法的麻烦在于**它没有错误可看**：
+不弹窗、不 404、控制台也不会有记录，只有用户觉得"这个链接是装饰"。
+
+要接住它必须两步都做：
+
+1. `setSupportMultipleWindows(true)` —— 不开这个开关，`onCreateWindow` 不会被调用；
+2. `onCreateWindow` 里 `return false`（不创建新 WebView），并从
+   `getHitTestResult().getExtra()` 取链接 —— 回调本身不带 URL，这是 WebView 唯一给的地方。
+
+普通外链走的是另一条路：`shouldOverrideUrlLoading`。这里有个容易漏的点：**新旧两个重载都要写**，
+API 24 以下只调 `(WebView, String)` 那个，只写新版的话旧设备上等于没改。
+
+放行的 scheme 是有意地窄：`http` / `https` / `mailto` / `tel`。`intent:` 能直接唤起任意
+Android 组件（包括我们自己的 Activity），`file:` 能读本地文件，`javascript:` 是另一类问题 ——
+这些都不该由"页面里放一条链接"来触发。
+
+**验证的天花板要提前说清**：这台机器没有 Android 设备也没有模拟器，能验的只有"编译通过、
+`classes.dex` 里确实有这几个方法、调用链逐条复核"。所以 CHANGELOG 里写的是
+"验到编译 + 包内存在"，而不是"点一下确实跳了"；README 里那条"没有手机怎么测 APK"说的
+也是同一件事。

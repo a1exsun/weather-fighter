@@ -189,6 +189,55 @@
 > 全部改掉了（117 条里 60 条挪动超过 2 分钟，最大 246 分钟）。具体见本节最上面那一条。
 
 
+## 2026-10-24（11:52）— Android 壳：站内留、站外一律交给系统浏览器
+
+一个一直在、也没人报过的毛病：App 里点站外链接，三种情况里只有一种是对的。
+
+### 🔗 三种结局，两种是坏的
+
+- **站内跳转**（页签、抽屉）：`https://tjs.local/...` 由 `LocalClient.shouldInterceptRequest`
+  拦下、从 assets 直接出，本来就正常。
+- **带 `target="_blank"` 的外链**：`web/js/wxui.js:1622`、`:1623`（观星条件里的 darkmap.cn、
+  lightpollutionmap.info）与 `web/index.html:494`（数据来源里的中国气象局官网）。桌面浏览器
+  开新标签页，**APK 里则毫无反应** —— WebView 的 `setSupportMultipleWindows` 默认是 `false`，
+  新窗口请求被静默丢弃，`onCreateWindow` 根本不会被调用。这种坏法没有错误可看：不弹窗、
+  不 404、控制台也没有记录。
+- **不带 `target` 的外链**：在同一个 WebView 里把站点整页顶掉。返回键要多按一次才能回来，
+  而且那是一个外站页面，跑在我们给 `tjs.local` 配的那套拦截器旁边。
+
+### 修法（只动 Android 壳）
+
+`android/java/com/tjs/weather/MainActivity.java`，+3,270 B / +63 行，四处插入、不改既有逻辑：
+
+1. `setSupportMultipleWindows(true)` —— 不开这个开关，`onCreateWindow` 不会被调用，
+   `target="_blank"` 永远是死链接。
+2. `GeoChromeClient.onCreateWindow()` —— 不新建 WebView：从命中测试的
+   `HitTestResult.getExtra()` 取出链接（点的是 `<a>`，extra 就是它的 href），
+   递给系统浏览器，`return false`。
+3. `LocalClient.shouldOverrideUrlLoading()` 新版 + 旧版两个重载 —— 站内（`ORIGIN` 开头、
+   `about:`）照旧交给 WebView，站外一律外跳。两个重载都得写：API 24 以下只会调旧的那个。
+4. `MainActivity.isInternal()` / `openExternal()` —— 只放行 `http` / `https` / `mailto` / `tel`；
+   别的 scheme（`intent:`、`file:`、`javascript:`）直接忽略，免得站内内容顺手唤起任意组件；
+   `startActivity` 外面套 `catch`，没装浏览器时不闪退。
+
+### 验证到什么程度
+
+- `tools/build_apk.py` 编译通过（javac 会提示"使用了已过时的 API"，那是刻意的：
+  旧版 `shouldOverrideUrlLoading` 必须保留）。
+- `tmp/verify_apk.py`：25 个网页资源逐字节一致，包内 `index.html` 引用的指纹与包内
+  `weather.js` 自洽。
+- 解开新包查 `classes.dex`：`shouldOverrideUrlLoading` / `onCreateWindow` /
+  `setSupportMultipleWindows` / `android.content.Intent` / `android.net.Uri` 全部命中 ——
+  确认代码真的进了包，而不只是"编译过了"。
+- 包体 1,460,735 B，sha256 `5155012e9d695833a0767651fc58bbc6327d0c9717fca06e2563a2026a118597`。
+- **天花板**：没有真机也没有模拟器，"点一下链接会不会真跳"没法在这台机器上验；能验的是
+  编译、代码在包里、调用链逐条复核。
+
+### 顺带
+
+这也是 PR #4（自动扫描器的 CWE-918 报告）讨论的收尾：站外页面不再在 WebView 里跑，
+出站面就只剩代理里那四个写死的宿主。网页版不受影响 —— 浏览器本来就是这个行为。
+
 ## 2026-10-19（16:18）— 降水预报图重新取得到；海温图不再等 8 张全尺寸图
 
 两个现象都是**数据源侧的时次/网络行为变了、而实现里咬着旧假设**。

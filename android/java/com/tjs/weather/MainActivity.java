@@ -2,10 +2,13 @@ package com.tjs.weather;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Message;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -134,6 +137,10 @@ public class MainActivity extends Activity {
         // navigator.geolocation 永远不会触发 onGeolocationPermissionsShowPrompt。
         s.setGeolocationEnabled(true);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+        // 打开"多窗口"回调：默认是 false，这时页面里 target="_blank" / window.open
+        // 的请求会被【静默丢弃】——用户点外链看起来像"没反应"。开了之后由
+        // GeoChromeClient.onCreateWindow 接手，把链接递交给系统浏览器。
+        s.setSupportMultipleWindows(true);
         // 让 WebView 的 UA 与桌面 Chrome 一致，减少被上游按 UA 拦截的概率
         s.setUserAgentString(UA);
         web.setBackgroundColor(Color.parseColor("#0e1015"));
@@ -157,6 +164,30 @@ public class MainActivity extends Activity {
     public void onBackPressed() {
         if (web != null && web.canGoBack()) web.goBack();
         else super.onBackPressed();
+    }
+
+    /* ───────── 外链：一律交给系统浏览器 ───────── */
+
+    /** 站内页面（含 about:blank 这种内部空白页）不算外链；null 也按站内处理。 */
+    private static boolean isInternal(String url) {
+        return url == null || url.startsWith(ORIGIN) || url.startsWith("about:");
+    }
+
+    /** 站外链接丢给系统浏览器。只放行 http(s) / mailto / tel —— 别的 scheme
+     *  （intent:、file:、javascript: …）一律忽略，免得站内内容顺手唤起任意组件。
+     *  没有对应 App 时什么也不做，绝不闪退。 */
+    private void openExternal(String url) {
+        if (isInternal(url)) return;
+        int c = url.indexOf(':');
+        if (c <= 0) return;
+        String scheme = url.substring(0, c).toLowerCase(Locale.ROOT);
+        if (!(scheme.equals("http") || scheme.equals("https")
+                || scheme.equals("mailto") || scheme.equals("tel"))) return;
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        } catch (Exception e) {
+            // 没装浏览器 / 没有邮件客户端：保持原地，不崩
+        }
     }
 
     /* ───────────────────────── 系统栏避让 ───────────────────────── */
@@ -238,11 +269,43 @@ public class MainActivity extends Activity {
                                                        GeolocationPermissions.Callback cb) {
             a.onGeoPrompt(cb, origin);
         }
+
+        /* 页面里 target="_blank" / window.open 的链接：不新建 WebView，直接把 URL
+           交给系统浏览器。onCreateWindow 本身不带 URL，只能从命中测试的 extra 里取
+           （点的是 <a>，命中结果里就是它的 href）。 */
+        @Override
+        public boolean onCreateWindow(WebView v, boolean isDialog,
+                                      boolean isUserGesture, Message msg) {
+            WebView.HitTestResult hit = v == null ? null : v.getHitTestResult();
+            String url = hit == null ? null : hit.getExtra();
+            if (!isInternal(url)) a.openExternal(url);
+            return false;                       // 不创建新窗口 ⇒ 只留"外跳"这一种结局
+        }
     }
 
     private static class LocalClient extends WebViewClient {        private final MainActivity a;
 
         LocalClient(MainActivity a) { this.a = a; }
+
+        /* 站内（ORIGIN 开头、about:）继续在 WebView 里走；站外一律交给系统浏览器。
+           以前只有两种结局：要么在同一个 WebView 里把站点整页顶掉（返回键还得多按
+           一次），要么因为 target="_blank" 而毫无反应。 */
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest req) {
+            if (req == null || !req.isForMainFrame()) return false;
+            String u = req.getUrl() == null ? null : req.getUrl().toString();
+            if (isInternal(u)) return false;
+            a.openExternal(u);
+            return true;
+        }
+
+        @Override
+        @SuppressWarnings("deprecation")
+        public boolean shouldOverrideUrlLoading(WebView v, String url) {
+            if (isInternal(url)) return false;
+            a.openExternal(url);
+            return true;
+        }
 
         @Override
         public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest req) {
