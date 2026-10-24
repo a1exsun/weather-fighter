@@ -3216,7 +3216,7 @@ Android 组件（包括我们自己的 Activity），`file:` 能读本地文件�
 2. **不占功能按钮的宽度**。顶栏中间是搜索框，右边是五个下拉和一个按钮，全是有功能的东西。署名不是入口，做成贴着标题的小标最省地方。
 3. **顺手回答了「源码在哪」**。点开直接跳仓库，比在「? 术语」里塞一条链接更直接。
 
-改动落在两处：`web/index.html:21` 的 `.brand-text` 之后（外加 `web/index.html:8` 的 `<meta name="author">`），样式在 `web/css/app.css` 的 `.brand-by`。
+改动落在两处：`web/index.html:21-22` 的 `.brand-text` 之后（外加 `web/index.html:8` 的 `<meta name="author">`），样式在 `web/css/app.css` 的 `.brand-by`。
 
 ### 记几条以后别改坏的约束
 
@@ -3232,5 +3232,5 @@ Android 组件（包括我们自己的 Activity），`file:` 能读本地文件�
 
 - 标注用 `opacity:.6` 压暗、`margin-right:4px` 与名字隔开：视线先落在名字上，同时知道那是"作者的名字"。
 - 名字是**独立的纯文本节点**（不是 `title`、不是图片），所以能选中、能复制；探针里专门断言了 `by.lastChild.textContent === 'lolikonnn'`。
-- 用中文「作者」而不是 `author:`：这一行的其他文字（`天气战士`、`老实看天气很枯燥吧？`）都是中文，英文标签会显得掉队。要换的话只改 `web/index.html:21` 那两个字，样式不用动。
+- 用中文「作者」而不是 `author:`：这一行的其他文字（`天气战士`、`老实看天气很枯燥吧？`）都是中文，英文标签会显得掉队。要换的话只改 `web/index.html:21-22` 那两个字，样式不用动。
 - 宽度：桌面 88px、窄屏 83px。窄屏右侧没有别的元素（副标题是 `display:none`），所以仍是一行；多出来的 26px 之后 `scrollWidth` 仍等于 `innerWidth`（探针 F 项每次都在量，不是一次性的）。

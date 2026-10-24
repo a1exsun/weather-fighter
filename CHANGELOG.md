@@ -189,22 +189,23 @@
 > 全部改掉了（117 条里 60 条挪动超过 2 分钟，最大 246 分钟）。具体见本节最上面那一条。
 
 
-## 2026-10-24（18:00）— 署名小标前面补上「作者」两个字
+## 2026-10-24（18:01）— 署名小标前面补上「作者」两个字
 
 只挂一个 `lolikonnn`，读起来像状态标签或品牌后缀，不像"这是谁"。改成 `作者 lolikonnn`：`作者` 压到 `opacity:.6`，名字保持原亮度。
 
-- `web/index.html:21`：链接内容从纯文本改成 `<span class="by-k">作者</span>lolikonnn`（名字仍是独立的纯文本节点，能选中、能复制）。
+- `web/index.html:21-22`：链接内容从纯文本改成 `<span class="by-k">作者</span>lolikonnn`（名字仍是独立的纯文本节点，能选中、能复制）。
 - `web/css/app.css`：新增 `.brand-by .by-k{opacity:.6;margin-right:4px}`；尾随 `?v=` 随之变成 `100a8d40`。
 - 尺寸：桌面 62→88px、窄屏 58→83px，仍在一行；顶栏高度依旧 46 / 136px（"把署名藏掉再量一次"的对照两次相同）；`scrollWidth == innerWidth`，没有横向溢出。
 - 探针 `tmp/byline.js` 从 17 项加到 **21 项**全通过。新增的四项：「作者」标注存在且文案正确、整块读起来是「作者 lolikonnn」、名字本身仍是纯文本节点、标注 `opacity=0.6` 且与名字之间有 4px 间距。
 - 用中文「作者」而不是 `author:`：这一行的其他文字（`天气战士`、`老实看天气很枯燥吧？`）都是中文，英文标签会显得掉队。
 
+`commit 045505b5b582`
 
 ## 2026-10-24（17:53）— 左上角标题块加了作者署名 lolikonnn
 
 主标题「天气战士」右边多了一个小标签 `lolikonnn`，点开是仓库地址；页面 `<head>` 里同时补了 `<meta name="author">`。
 
-- `web/index.html:21`：`.brand-text` 之后新增 `<a class="brand-by" href="https://github.com/lolikonnn/weather-fighter" target="_blank" rel="noopener" title="作者 lolikonnn · 点开看源码">lolikonnn</a>`；`web/index.html:8` 加 `<meta name="author" content="lolikonnn">`。
+- `web/index.html:21-22`：`.brand-text` 之后新增 `<a class="brand-by" href="https://github.com/lolikonnn/weather-fighter" target="_blank" rel="noopener" title="作者 lolikonnn · 点开看源码">lolikonnn</a>`；`web/index.html:8` 加 `<meta name="author" content="lolikonnn">`。
 - `web/css/app.css`：`.brand-by` 走小标样式（10.5px、`var(--dim)` 字色、琥珀色淡底 + 1px 描边、`border-radius:4px`），hover 变 `--accent`；`@media (max-width:860px)` 里缩到 10px / `padding:3px 5px`。
 - 尺寸与位置：桌面顶栏 46px、窄屏 136px 都**不变**（探针里"藏掉署名再量一次"仍是 46 / 136）；署名高 21px、比 logo 的 27px 矮，不参与行高决定；与标题文字同一中线、贴在其右缘右侧（桌面 226→235、窄屏 94→103）；`scrollWidth == innerWidth`，无横向溢出。
 - 窄屏上原本那一行副标题「老实看天气很枯燥吧？」是 `display:none`，署名正好补在那个位置，不会二次折行。
@@ -4071,7 +4072,7 @@ Wikipedia 在这台机器上连不通（超时），AMS 的日历是 Next.js 客
 
 > 需求：把免责声明里"本质套皮"那句话删掉。
 
-- `web/index.html:214` 底部常驻免责声明条：`…本站只做展示，本质是个套皮软件 · 点此看完整声明`
+- `web/index.html:21-224` 底部常驻免责声明条：`…本站只做展示，本质是个套皮软件 · 点此看完整声明`
   → `…本站只做展示 · 点此看完整声明`。
 - 首访弹窗里那句措辞不同的自嘲（`web/index.html:395`「说白了就是个给天气预报套了层炒股软件皮的
   套皮小玩具」）**保留未动** —— 所指是免责声明条那句，弹窗那句是另一回事。
