@@ -189,6 +189,16 @@
 > 全部改掉了（117 条里 60 条挪动超过 2 分钟，最大 246 分钟）。具体见本节最上面那一条。
 
 
+## 2026-10-24（17:53）— 左上角标题块加了作者署名 lolikonnn
+
+主标题「天气战士」右边多了一个小标签 `lolikonnn`，点开是仓库地址；页面 `<head>` 里同时补了 `<meta name="author">`。
+
+- `web/index.html:21`：`.brand-text` 之后新增 `<a class="brand-by" href="https://github.com/lolikonnn/weather-fighter" target="_blank" rel="noopener" title="作者 lolikonnn · 点开看源码">lolikonnn</a>`；`web/index.html:8` 加 `<meta name="author" content="lolikonnn">`。
+- `web/css/app.css`：`.brand-by` 走小标样式（10.5px、`var(--dim)` 字色、琥珀色淡底 + 1px 描边、`border-radius:4px`），hover 变 `--accent`；`@media (max-width:860px)` 里缩到 10px / `padding:3px 5px`。
+- 尺寸与位置：桌面顶栏 46px、窄屏 136px 都**不变**（探针里"藏掉署名再量一次"仍是 46 / 136）；署名高 21px、比 logo 的 27px 矮，不参与行高决定；与标题文字同一中线、贴在其右缘右侧（桌面 226→235、窄屏 94→103）；`scrollWidth == innerWidth`，无横向溢出。
+- 窄屏上原本那一行副标题「老实看天气很枯燥吧？」是 `display:none`，署名正好补在那个位置，不会二次折行。
+- 探针 `tmp/byline.js` **17 项全通过**（桌面 1682×948、窄屏 487×608）：文案 / href / `target` / `rel` / `title`、`elementFromPoint` 中心点最上层是它自己、同一行对齐、顶栏高度不变、比 logo 矮、无横向溢出。`target="_blank"` 在安卓壳里由 `shouldOverrideUrlLoading` 交给系统浏览器（见 2026-10-24（11:44）那条）。
+
 ## 2026-10-24（11:44）— Android 壳：站内留、站外一律交给系统浏览器
 
 一个一直在、也没人报过的毛病：App 里点站外链接，三种情况里只有一种是对的。
