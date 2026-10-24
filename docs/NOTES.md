@@ -3225,3 +3225,12 @@ Android 组件（包括我们自己的 Activity），`file:` 能读本地文件�
 - **窄屏那行副标题是被藏掉的**，署名补进它让出来的位置，所以不会折行。将来若恢复副标题，要重新量一次顶栏高度。
 - **必须带 `rel="noopener"`**；`target="_blank"` 在安卓壳里会被 `shouldOverrideUrlLoading` 拦下交给系统浏览器，不会在 App 内开新窗口（那个坑见本文「安卓壳里，站外链接为什么必须外跳」）。
 - 探针在 `tmp/byline.js`（`tmp/mkprobe.py` → `web/__byline.html`），共 17 项断言。它跑之前必须先点掉首访免责弹窗（`#welcomeOk`），否则 `#welcome.modal-mask` 盖住整屏，`elementFromPoint` 永远返回遮罩层 —— 第一版就是这么误判的。
+
+### 署名前面为什么要加「作者」两个字
+
+只放一个 `lolikonnn`，读起来像某个状态标签或品牌后缀，不像"这是谁做的"。加上「作者」语义立刻明确，代价是两个中文字 ≈ 26px 宽。
+
+- 标注用 `opacity:.6` 压暗、`margin-right:4px` 与名字隔开：视线先落在名字上，同时知道那是"作者的名字"。
+- 名字是**独立的纯文本节点**（不是 `title`、不是图片），所以能选中、能复制；探针里专门断言了 `by.lastChild.textContent === 'lolikonnn'`。
+- 用中文「作者」而不是 `author:`：这一行的其他文字（`天气战士`、`老实看天气很枯燥吧？`）都是中文，英文标签会显得掉队。要换的话只改 `web/index.html:21` 那两个字，样式不用动。
+- 宽度：桌面 88px、窄屏 83px。窄屏右侧没有别的元素（副标题是 `display:none`），所以仍是一行；多出来的 26px 之后 `scrollWidth` 仍等于 `innerWidth`（探针 F 项每次都在量，不是一次性的）。
