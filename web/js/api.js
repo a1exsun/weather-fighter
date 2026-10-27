@@ -1110,6 +1110,8 @@
      * 失败返回 null（游戏那边会把大盘项退化成 0，纯本地行情照跑）。
      */
     async regionIndex(city, maxCities) {
+      // 候选只有国内城市：海外城市退到「最近的几座」会拼进几千公里外的城市，时间轴还差几个时区
+      if (city.world) return null;
       const N = maxCities || 8;
       const all = (Cities.all || []).filter(c => c && c.lat != null && c.lon != null);
       let list = all.filter(c => c.prov && c.prov === city.prov);
