@@ -169,6 +169,8 @@ https://earthquake.usgs.gov/fdsnws/event/1/query
 
 `https://geo.datav.aliyun.com/areas_v3/bound/{adcode}_full.json` —— 建库时用它生成 3237 条三级地名（`tools/build_places.py`）。
 
+海外城市目录 `web/data/world-cities.json`（189 座）由 `tools/build_world.py` 生成：中文名手写，坐标 / IANA 时区 / 人口取 Open-Meteo geocoding `/v1/search`，国家中文名取 `/v1/get?id=…&language=zh`（金沙萨会给出旧称「扎伊尔」，脚本里有更正表）。
+
 ### 8. 构建 / 运维期用到的
 
 | 用途 | 地址 |

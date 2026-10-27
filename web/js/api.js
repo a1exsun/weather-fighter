@@ -159,7 +159,7 @@
 
   /* ═══════════════ 1. 城市数据集 ═══════════════ */
   const Cities = {
-    all: [], hot: [], byId: {}, places: [],
+    all: [], hot: [], byId: {}, places: [], world: [],
     async load() {
       if (this.all.length) return this;
       const d = await getJSON('data/cities.json?ts=' + Math.floor(Date.now() / 3600000), { ttl: 3600000 });
@@ -178,7 +178,24 @@
       if (!this.hot.length) this.hot = this.all.slice(0, 20);
       this.updated = d.updated;
       await this.loadPlaces();          // 拿不到也不影响主目录
+      await this.loadWorld();
       return this;
+    },
+    /** 海外城市（tools/build_world.py 生成）。跟 places 一样只进搜索和 byId，天气全走
+     *  Open-Meteo 按坐标取；带 IANA 时区 tz，「今天 / 现在」按它算（见 cityNow）。 */
+    async loadWorld() {
+      if (this.world.length) return this.world;
+      let d;
+      try {
+        d = await getJSON('data/world-cities.json?ts=' + Math.floor(Date.now() / 86400000), { ttl: 86400000 });
+      } catch (e) { return this.world; }
+      this.world = (d.cities || []).map(c => {
+        c.cma = ''; c.world = true;
+        c.search = (c.name + ' ' + c.prov + ' ' + c.en + ' ' + c.py + ' ' + c.id).toLowerCase();
+        if (!this.byId[c.id]) this.byId[c.id] = c;
+        return c;
+      });
+      return this.world;
     },
     /** 省 / 地级市 / 区县三级地名目录（带中心点经纬度）。
      *  cities.json 只有 352 个**地级市**（源自气象局站号表），所以义乌、昆山、
@@ -234,6 +251,7 @@
       };
       scan(this.all, 0);
       scan(this.places, -5);            // 同分时优先有气象局站号的城市
+      scan(this.world, -5);
       out.sort((a, b) => b.score - a.score);
       return out.slice(0, limit || 40).map(o => o.c);
     }

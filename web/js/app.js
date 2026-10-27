@@ -1772,11 +1772,12 @@
         el('span', {
           class: 'sr-prov',
           text: c.place ? (c.prov || '') + (c.city ? ' · ' + c.city : '')
+            : c.world ? (c.prov || '') + ' · ' + c.en
             : (c.prov || '') + (c.cma ? ' · ' + c.cma : '')
         }),
         el('span', {
           class: 'sr-code',
-          text: c.place ? (c.lev === 3 ? '区县' : c.lev === 2 ? '市' : '省') : c.id
+          text: c.place ? (c.lev === 3 ? '区县' : c.lev === 2 ? '市' : '省') : c.world ? '海外' : c.id
         })
       ]);
       row.appendChild(el('span', {
